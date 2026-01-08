@@ -1,0 +1,103 @@
+<div id="app-container" style="font-family: 'Segoe UI', Roboto, sans-serif; max-width: 450px; margin: 20px auto; background: #1e1e26; color: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+  
+  <div style="background: #2d3436; padding: 20px; text-align: center; border-bottom: 3px solid #6c5ce7;">
+    <h2 style="margin: 0; letter-spacing: 2px;">SCRABBLE PRO</h2>
+  </div>
+
+  <div style="padding: 20px;">
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <input type="text" id="playerName" placeholder="Player Name" style="flex: 1; padding: 12px; border-radius: 8px; border: none; background: #2d3436; color: white;">
+      <button onclick="addPlayer()" style="background: #6c5ce7; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">+</button>
+    </div>
+
+    <div id="scoringArea" style="display:none; background: #2d3436; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+      <select id="playerSelect" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #1e1e26; color: white; border: 1px solid #444;"></select>
+      <input type="text" id="wordInput" placeholder="Enter word..." style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: none; box-sizing: border-box; text-transform: uppercase; font-weight: bold;">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+        <button onclick="submitScore(1)" style="padding: 10px; background: #00b894; color: white; border: none; border-radius: 5px; cursor: pointer;">Normal</button>
+        <button onclick="submitScore(2)" style="padding: 10px; background: #fdcb6e; color: black; border: none; border-radius: 5px; cursor: pointer;">Double W</button>
+        <button onclick="submitScore(3)" style="padding: 10px; background: #e17055; color: white; border: none; border-radius: 5px; cursor: pointer;">Triple W</button>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom: 10px; color: #a29bfe;">LEADERBOARD</h4>
+    <div id="leaderboard" style="margin-bottom: 20px;"></div>
+
+    <h4 style="margin-bottom: 10px; color: #a29bfe;">HISTORY</h4>
+    <div id="history" style="font-size: 0.85rem; height: 100px; overflow-y: auto; background: #16161d; padding: 10px; border-radius: 8px; color: #ccc;"></div>
+
+    <button onclick="clearGame()" style="width: 100%; margin-top: 20px; padding: 10px; background: none; color: #ff7675; border: 1px solid #ff7675; border-radius: 8px; cursor: pointer;">Reset Game</button>
+  </div>
+</div>
+
+<script>
+  let players = JSON.parse(localStorage.getItem('scrabblePlayers')) || [];
+  let history = JSON.parse(localStorage.getItem('scrabbleHistory')) || [];
+  const letterValues = {'A':1,'B':3,'C':3,'D':2,'E':1,'F':4,'G':2,'H':4,'I':1,'J':8,'K':5,'L':1,'M':3,'N':1,'O':1,'P':3,'Q':10,'R':1,'S':1,'T':1,'U':1,'V':4,'W':4,'X':8,'Y':4,'Z':10};
+
+  function addPlayer() {
+    const name = document.getElementById('playerName').value;
+    if (name) {
+      players.push({ name: name, score: 0 });
+      document.getElementById('playerName').value = '';
+      saveAndUpdate();
+    }
+  }
+
+  function submitScore(multiplier) {
+    const playerIndex = document.getElementById('playerSelect').value;
+    const word = document.getElementById('wordInput').value.toUpperCase().trim();
+    if (!word) return;
+
+    let wordScore = 0;
+    for (let letter of word) {
+      wordScore += letterValues[letter] || 0;
+    }
+    const finalScore = wordScore * multiplier;
+
+    players[playerIndex].score += finalScore;
+    history.unshift(`${players[playerIndex].name} played ${word} for ${finalScore}pts`);
+    
+    document.getElementById('wordInput').value = '';
+    saveAndUpdate();
+  }
+
+  function saveAndUpdate() {
+    localStorage.setItem('scrabblePlayers', JSON.stringify(players));
+    localStorage.setItem('scrabbleHistory', JSON.stringify(history));
+    updateUI();
+  }
+
+  function updateUI() {
+    const list = document.getElementById('leaderboard');
+    const histDiv = document.getElementById('history');
+    const select = document.getElementById('playerSelect');
+    const scoringArea = document.getElementById('scoringArea');
+
+    if (players.length > 0) scoringArea.style.display = 'block';
+
+    // Sort players by score
+    const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+
+    list.innerHTML = sortedPlayers.map(p => `
+      <div style="display: flex; justify-content: space-between; padding: 12px; background: #2d3436; margin-bottom: 5px; border-radius: 8px;">
+        <span>${p.name}</span>
+        <strong style="color: #00cec9;">${p.score}</strong>
+      </div>`).join('');
+    
+    select.innerHTML = players.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+    histDiv.innerHTML = history.map(h => `<div style="padding: 2px 0; border-bottom: 1px solid #2d3436;">${h}</div>`).join('');
+  }
+
+  function clearGame() {
+    if(confirm("Start a new game?")) {
+      players = [];
+      history = [];
+      localStorage.clear();
+      location.reload(); 
+    }
+  }
+
+  updateUI();
+</script>
