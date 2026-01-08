@@ -22,6 +22,7 @@
       </div>
     </div>
 
+    
     <h4 style="margin-bottom: 10px; color: #a29bfe;">LEADERBOARD</h4>
     <div id="leaderboard" style="margin-bottom: 20px;"></div>
 
@@ -101,6 +102,40 @@
   }
 
   updateUI();
+  let timeLeft = 60;
+  let timerInterval;
+
+  function startTimer() {
+    // Clear any existing timer so they don't overlap
+    clearInterval(timerInterval);
+    
+    timeLeft = 60; // Reset to 1 minute
+    document.getElementById('timerDisplay').innerText = "01:00";
+    document.getElementById('timerDisplay').style.color = "white";
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      
+      // Calculate minutes and seconds
+      let mins = Math.floor(timeLeft / 60);
+      let secs = timeLeft % 60;
+      
+      // Update the display
+      document.getElementById('timerDisplay').innerText = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      // Change color to yellow when 10 seconds left
+      if (timeLeft <= 10) {
+        document.getElementById('timerDisplay').style.color = "#f1c40f";
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').style.color = "#ff7675";
+        alert("Time is up! Your turn is over.");
+      }
+    }, 1000);
+  }
   function addBingo() {
   const playerIndex = document.getElementById('playerSelect').value;
   players[playerIndex].score += 50;
@@ -109,5 +144,6 @@
 }
 
 </script>
+
 
 
